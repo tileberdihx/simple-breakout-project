@@ -101,30 +101,69 @@ void derive_graphics_metrics()
     };
 }
 
+void draw_text_with_border(const Text& t, Color borderColor, int borderThickness = 2)
+{
+
+    for (int dx = -borderThickness; dx <= borderThickness; dx++)
+    {
+        for (int dy = -borderThickness; dy <= borderThickness; dy++)
+        {
+            if (dx == 0 && dy == 0) continue;
+
+            Text borderText = t;
+            borderText.color = borderColor;
+
+
+            borderText.position.x += dx;
+            borderText.position.y += dy;
+
+            draw_text(borderText);
+        }
+    }
+
+
+    draw_text(t);
+}
+
+
+
 void draw_menu()
 {
-    ClearBackground(BLACK);
+    ClearBackground({ 15, 15, 25, 255 });
 
-    const Text game_title = {
-        "Breakout",
-        { 0.50f, 0.50f },
-        200.0f,
-        RED,
-        4.0f,
-        &menu_font
-    };
-    draw_text(game_title);
+    float time = GetTime();
 
-    const Text game_subtitle = {
-        "Press Enter to Start",
-        { 0.50f, 0.65f },
-        32.0f,
-        WHITE,
-        4.0f,
-        &menu_font
-    };
-    draw_text(game_subtitle);
+
+    float glow = 0.5f + 0.5f * sin(time * 2.0f);
+    float easedGlow = glow * glow;
+    Color titleColor = { (unsigned char)(200 + easedGlow * 55), (unsigned char)(80 + easedGlow * 100), (unsigned char)(50 + easedGlow * 50), 255 };
+
+    Text title = { "BREAKOUT", {0.50f, 0.40f}, 200.0f, titleColor, 4.0f, &menu_font };
+    draw_text_with_border(title, BLACK, 4);
+
+
+    float pulse = 0.5f + 0.5f * sin(time * 3.0f);
+    Color subtitleColor = { 0, (unsigned char)(200 + 55 * pulse), (unsigned char)(220 + 35 * pulse), (unsigned char)(180 + 75 * pulse) };
+    float floatOffset = 5.0f * sin(time * 2.5f);
+
+    Text subtitle = { "PRESS ENTER TO START", {0.50f, 0.62f + floatOffset / screen_size.y}, 42.0f, subtitleColor, 4.0f, &menu_font };
+    draw_text_with_border(subtitle, BLACK, 3);
+
+
+    const int particle_count = 50;
+    for (int i = 0; i < particle_count; i++) {
+        float px = fmod((i * 53 + time * (20 + i * 0.5f)), screen_size.x);
+        float py = fmod((i * 97 + time * (15 + i * 0.3f)), screen_size.y);
+        float fade = 0.5f + 0.5f * sin(time + i);
+        DrawPixel(px, py, (Color){ 255, 255, 255, (unsigned char)(100 + 100 * fade) });
+    }
+
+
+    Text footer = { "© 2025 TILEBERDI STUDIOS", {0.50f, 0.95f}, 20.0f, {180, 180, 220, 200}, 2.0f, &menu_font };
+    draw_text_with_border(footer, BLACK, 2);
 }
+
+
 
 void draw_ui()
 {
@@ -188,18 +227,64 @@ void draw_ball()
 
 void draw_pause_menu()
 {
-    ClearBackground(BLACK);
 
-    const Text paused_title = {
-        "Press Escape to Resume",
-        { 0.50f, 0.50f },
-        32.0f,
-        WHITE,
-        4.0f,
-        &menu_font
+    draw_level();
+    draw_paddle();
+    draw_ball();
+    draw_ui();
+
+
+    DrawRectangle(0, 0, screen_size.x, screen_size.y, (Color){10, 5, 30, 200});
+
+
+    for (int y = 0; y < screen_size.y; y += 2) {
+        DrawLine(0, y, screen_size.x, y, (Color){0, 0, 0, 80});
+    }
+
+    float time = GetTime();
+
+
+    float glow = 0.5f + 0.5f * sin(time * 2.0f);
+    Color titleColor = {
+        (unsigned char)(0 + glow * 50),
+        (unsigned char)(200 + glow * 55),
+        (unsigned char)(255),
+        255
     };
-    draw_text(paused_title);
+
+    Text pausedTitle = { "PAUSED", {0.5f, 0.3f}, 80.0f, titleColor, 0.0f, &menu_font };
+    draw_text_with_border(pausedTitle, (Color){0, 120, 200, 255}, 4); // darker cyan border
+
+
+    float pulse = 0.6f + 0.4f * sin(time * 1.8f);
+    float floatOffset = 8.0f * sin(time * 1.5f);
+
+    Color instrColor = {
+        (unsigned char)(255 * pulse),
+        (unsigned char)(50 * pulse),
+        (unsigned char)(200 * pulse),
+        255
+    };
+
+    Text resumeText = { "PRESS Q TO RESUME", {0.5f, 0.5f + floatOffset / screen_size.y}, 36.0f, instrColor, 0.0f, &menu_font };
+    draw_text_with_border(resumeText, (Color){180, 0, 150, 255}, 2);
+
+    Text quitText = { "PRESS ESC TO QUIT", {0.5f, 0.6f - floatOffset / screen_size.y}, 36.0f, instrColor, 0.0f, &menu_font };
+    draw_text_with_border(quitText, (Color){180, 0, 150, 255}, 2);
+
+
+    float glitchPulse = 0.7f + 0.3f * sin(time * 6.0f);
+    int glitchY = (int)(0.35f * screen_size.y + 2.0f * sin(time * 4.0f));
+    int glitchWidth = (int)(0.4f * screen_size.x * glitchPulse);
+    DrawRectangle((int)(0.3f * screen_size.x), glitchY, glitchWidth, 6, (Color){255, 30, 50, 200});
+
+
+    if ((int)(time * 5) % 10 == 0) {
+        DrawCircle((int)(0.95f * screen_size.x), (int)(0.05f * screen_size.y), 2, (Color){100, 255, 255, 150});
+    }
 }
+
+
 
 void init_victory_menu()
 {

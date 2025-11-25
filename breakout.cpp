@@ -17,7 +17,7 @@ void update()
         }
         break;
     case in_game_state:
-        if (IsKeyPressed(KEY_ESCAPE)) {
+        if (IsKeyPressed(KEY_Q)) {
             game_state = paused_state;
         }
         if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)) {
@@ -38,7 +38,7 @@ void update()
         }
         break;
     case paused_state:
-        if (IsKeyPressed(KEY_ESCAPE)) {
+        if (IsKeyPressed(KEY_Q)) {
             game_state = in_game_state;
         }
         break;
